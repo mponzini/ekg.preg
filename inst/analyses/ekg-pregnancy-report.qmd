@@ -1,0 +1,81 @@
+---
+title: "Electrocardiogram Changes Associated with Pregnancy and Pregnancy Trimesters"
+format: 
+  html:
+    echo: false
+    message: false
+    embed-resources: true
+    toc: true
+    toc-depth: 1
+    appendix-style: plain
+    mainfont: serif
+    html-math-method: mathjax
+    cap-location: top
+    fig-cap-location: top
+    tbl-cap-location: top
+    date: last-modified
+    date-format: "[Last modified:] YYYY-MM-DD: H:mm:ss (A)"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+devtools::load_all()
+
+dat_raw <- openxlsx::read.xlsx(
+  "../extdata/merged_cleaned_tmp_1_subset_wks_relabelled_normals_3 2.xlsx"
+)
+# age range in raw data for inline reporting
+age_range <- range(dat_raw$AgeAtDelivery) |> round(0)
+age_range <- paste0(age_range[1], "-", age_range[2])
+
+dat <- ekg.preg::ekg_normal
+# number of pt, preg, and ekg for inline reporting
+n_ekg_preg <- extract_n_ekg(
+  dat |> 
+    dplyr::filter(Pregnant == "Pregnant")
+)
+n_ekg_not_preg <- extract_n_ekg(
+  dat |> 
+    dplyr::filter(Pregnant == "Not Pregnant")
+)
+
+prop_ekg_not_preg <- paste0(
+  round(
+    (n_ekg_not_preg / (n_ekg_preg + n_ekg_not_preg)) * 100,
+    2
+  ),
+  "%"
+)
+
+prop_ekg_preg <- paste0(
+  round(
+    (n_ekg_preg / (n_ekg_preg + n_ekg_not_preg)) * 100,
+    2
+  ),
+  "%"
+)
+
+# ekg during 2wks postpartum
+n_ekg_tri4 <- extract_n_ekg(dat, trimester = 4)
+```
+
+
+# Objective  
+
+{{< include _sec-objectives.qmd >}}
+
+# Study Design  
+
+{{< include _sec-design.qmd >}}
+
+# Results  
+
+{{< include _sec-results.qmd >}}
+
+# Conclusion  
+
+{{< include _sec-conclusions.qmd >}}

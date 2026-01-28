@@ -1,0 +1,10 @@
+
+::: {.callout-caution collapse="true"}  
+
+## Conclusions not updated since new data  
+
+Of the four ECG features, only heart rate was found to associate with pregnancy. 
+The association is present particularly in the 3^rd^ trimester. 
+By establishing ECG features associated with pregnancy by trimester, we can begin to characterize patterns associated with abnormal pregnancies. Future research includes extracting subtle ECG patterns beyond these well characterized ECG features to further investigate associations with normal pregnancy and to evaluate how they can be used to predict cardiovascular changes associated with cardiovascular complications of pregnancy and postpartum.
+
+:::

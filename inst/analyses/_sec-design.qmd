@@ -1,0 +1,11 @@
+
+This is an analysis of a database that includes `r nrow(dat_raw)` ECGs 
+on `r extract_n_subj(dat_raw)` individual patients from `r age_range` years 
+of age who were pregnant at least once between 2011 to 2024 in a single 
+tertiary medical center. 
+Univariate and multiple generalized linear mixed effect models with a 
+random effect for pregnancy identifier were fit to evaluate associations 
+between four ECG features 
+(QRS interval, QTc interval, PR interval, and heart rate) 
+and pregnancy after 6 weeks and by trimester compared to ECG features in 
+women who were not pregnant nor within 6 months postpartum.  

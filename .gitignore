@@ -47,3 +47,11 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+.Rproj.user
+
+# raw data
+data/*.rda
+inst/extdata/*.xlsx
+
+# rendered reports
+inst/analyses/*.html

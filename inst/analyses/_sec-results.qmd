@@ -1,0 +1,252 @@
+
+```{r}
+#| label: fit-models
+#| include: false
+
+# EKG Feature ~ Trimester
+qrs_preg_lmer <- lmerTest::lmer(
+  QRS_Duration ~ Trimester + (1|PregKey),
+  data = dat
+)
+
+qtc_preg_lmer <- lmerTest::lmer(
+  QTc_Bazett ~ Trimester + (1|PregKey),
+  data = dat
+)
+
+pr_preg_lmer <- lmerTest::lmer(
+  PR_Interval ~ Trimester + (1|PregKey),
+  data = dat
+)
+
+vent_preg_lmer <- lmerTest::lmer(
+  VentRate ~ Trimester + (1|PregKey),
+  data = dat
+)
+
+trimester_ekg_results <- dplyr::left_join(
+  process_ekg_lmer(qrs_preg_lmer) |> 
+    dplyr::rename(`QRS Duration` = Estimate),
+  process_ekg_lmer(qtc_preg_lmer) |> 
+    dplyr::rename(`QTc Interval` = Estimate),
+  by = ("Predictor" = "Predictor")
+) |>
+  dplyr::left_join(
+    process_ekg_lmer(pr_preg_lmer) |> 
+      dplyr::rename(`PR Interval` = Estimate),
+    by = ("Predictor" = "Predictor")
+  ) |>
+  dplyr::left_join(
+    process_ekg_lmer(vent_preg_lmer) |> 
+      dplyr::rename(`Heart Rate` = Estimate),
+    by = ("Predictor" = "Predictor")
+  )
+
+ekg_tri_model <- list(
+  "PR Interval" = pr_preg_lmer, 
+  "QRS Duration" = qrs_preg_lmer, 
+  "QTc Interval" = qtc_preg_lmer, 
+  "Heart Rate" = vent_preg_lmer
+)
+
+trimester_ekg_marginals <- dplyr::bind_cols(
+  lapply(
+    1:4,
+    function(x) {
+      ggeffects::predict_response(
+        ekg_tri_model[[x]], terms = "Trimester", margin = "mean_reference"
+      ) |> 
+        tibble::as_tibble() |> 
+        # round to 2 decimals
+        dplyr::mutate(
+          dplyr::across(
+            .cols = where(is.numeric),
+            ~ .x |> round(2)
+          )
+        ) |> 
+        # combine ci into single column
+        tidyr::unite("ci", conf.low, conf.high, sep = ", ") |> 
+        # combine est and ci into single column
+        tidyr::unite(
+          col = "tmp", 
+          predicted, ci, 
+          sep = " ("
+        ) |> 
+        dplyr::mutate(
+          tmp = paste0(tmp, ")")
+        ) |> 
+        # rename columns
+        dplyr::rename(
+          "Trimester" = x,
+          !!names(ekg_tri_model)[x] := tmp
+        ) |> 
+        # remove unnecessary columns
+        dplyr::select(-c(std.error, group))
+    }
+  )
+) |> 
+  dplyr::rename(
+    Trimester = `Trimester...1`
+  ) |> 
+  dplyr::select(
+    -c(`Trimester...3`, `Trimester...5`, `Trimester...7`)
+  )
+  
+  
+
+# multivariable model: preg = ekg pred
+preg_ekg_lmer <- lme4::glmer(
+  Pregnant ~ PR_Interval + QRS_Duration + QTc_Bazett + VentRate + 
+    (1|PregKey),
+  data = dat,
+  family = binomial
+)
+
+# process results
+tmp <- summary(preg_ekg_lmer)$coefficients |>
+  tibble::as_tibble(rownames = NA) |>
+  tibble::rownames_to_column(var = "Variable")
+est <- gtsummary::style_sigfig(
+  x = exp(tmp$Estimate), 
+  digits = 3
+)
+lower <- gtsummary::style_sigfig(
+  x = exp(tmp$Estimate - (1.96 * tmp$`Std. Error`)), 
+  digits = 3
+)
+upper <- gtsummary::style_sigfig(
+  x = exp(tmp$Estimate + (1.96 * tmp$`Std. Error`)), 
+  digits = 3
+)
+p_vals <- gtsummary::style_pvalue(tmp$`Pr(>|z|)`)
+
+# combine
+preg_ekg_results <- data.frame(
+  Predictors = c("Intercept", "PR Interval", "QRS Duration", 
+                 "QTc Interval", "Heart Rate"),
+  `OR (95% CI)` = paste0(est, " (", lower, ", ", upper, ")"),
+  `p-value` = p_vals,
+  Explanation = c(
+    " ",
+    # PR Interval
+    paste0("A 10 unit increase in the PR Interval is associated with a ",
+           "2.6% decrease in the odds of being pregnant",
+           ", controlling for the other ECG characteristics."),
+    # QRS Duration
+    paste0("A 10 unit increase in the QRS duration is associated with a ",
+           "4.4% decrease in the odds of being pregnant",
+           ", controlling for the other ECG characteristics."),
+    # QTc Interval
+    paste0("A 10 unit increase in the QTc Interval is associated with a ",
+           "0.1% decrease in the odds of being pregnant",
+           ", controlling for the other ECG characteristics."),
+    # Heart Rate
+    paste0("A 10bpm increase in the heart rate is associated with a ",
+           "7% increase in the odds of being pregnant",
+           ", controlling for the other ECG characteristics.")
+  ),
+  check.names = FALSE
+) |>
+  # remove Intercept
+  dplyr::filter(
+    Predictors != "Intercept"
+  )
+```
+
+
+After excluding patients with pre-existing myocardial infarction, 
+heart failure, heart valve disorders, atrial fibrillation and other arrhythmias, 
+along with those who developed hypertensive disorders of pregnancy, 
+`r extract_n_ekg(dat)` ECGs from `r extract_n_subj(dat)` patients were 
+included: `r n_ekg_not_preg` of ECGs (`r prop_ekg_not_preg`) were obtained 
+outside of pregnancy or the 6 months postpartum period and `r n_ekg_preg` of 
+ECGs (`r prop_ekg_preg`) during pregnancy or 2 weeks postpartum, 
+`r n_ekg_tri4` ECGs were during the 2 weeks postpartum period. 
+In a multiple logistic mixed effect model, a higher heart rate were 
+associated the pregnancy state (@tbl-preg-ekg)). 
+The shorter PR interval was associated with the 2nd and 3rd trimesters, 
+while higher heart rate was associated with the third trimester, 
+(@tbl-ekg-trimester and @tbl-ekg-trimester-pred).  
+
+::: {#tbl-preg-ekg}
+
+```{r}
+flextable::flextable(preg_ekg_results) |>
+  flextable::theme_vanilla() |>
+  flextable::fontsize(
+    i = c(1:4),
+    j = c(1, 2),
+    size = 10
+  ) |>
+  flextable::width(
+    j = 1, width = 1.75
+  ) |>
+  flextable::width(
+    j = 2, width = 2.25
+  ) |>
+  flextable::width(
+    j = 4,
+    width = 4
+  )
+```
+Summary of ECG Features Associated with Pregnancy Compared to Non-pregnant State.
+:::
+
+
+::: {#tbl-ekg-trimester}
+
+```{r}
+flextable::flextable(trimester_ekg_results) |>
+  flextable::theme_vanilla() |>
+  flextable::fontsize(
+    i = c(1:6),
+    j = c(1:5),
+    size = 10
+  ) |>
+  flextable::width(
+    j = 1, width = 1.2
+  ) |>
+  flextable::width(
+    j = c(2:5), width = 1.6
+  ) |>
+  # manually select cells to bold
+  flextable::bold(
+    i = 3,
+    j = 4
+  ) |>
+  flextable::bold(
+    i = 4,
+    j = c(4, 5)
+  ) |>
+  flextable::bold(
+    i = 5,
+    j = c(4, 5)
+  ) 
+```
+Results of linear mixed effect models: ECG Features Associated with Pregnancy 
+Trimesters compared to period before pregnancy (Trimester 0)
+:::
+
+::: {#tbl-ekg-trimester-pred}
+
+```{r}
+trimester_ekg_marginals |> 
+  flextable::flextable() |> 
+  flextable::theme_vanilla() |> 
+  flextable::autofit() |> 
+  # manually select cells to bold
+  flextable::bold(
+    i = 3,
+    j = 2
+  ) |>
+  flextable::bold(
+    i = 4,
+    j = c(2, 5)
+  ) |>
+  flextable::bold(
+    i = 5,
+    j = c(2, 5)
+  ) 
+```
+Marginal estimates of ECG Features by Pregnancy Trimesters.
+:::
