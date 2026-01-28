@@ -151,6 +151,13 @@ preg_ekg_results <- data.frame(
   dplyr::filter(
     Predictors != "Intercept"
   )
+
+# Trend test for EKG features across trimesters
+ekg_trend_results <- process_ekg_trends(
+  data = dat,
+  ekg_vars = c("PR_Interval", "QRS_Duration", "QTc_Bazett", "VentRate"),
+  trimesters = c(0, 1, 2, 3, 4)
+)
 ```
 
 
@@ -249,4 +256,35 @@ trimester_ekg_marginals |>
   ) 
 ```
 Marginal estimates of ECG Features by Pregnancy Trimesters.
+:::
+
+## Trend Tests
+
+To formally test whether ECG features change systematically across pregnancy 
+trimesters, we performed trend tests using both non-parametric 
+(Jonckheere-Terpstra) and parametric (polynomial contrasts) methods. The 
+Jonckheere-Terpstra test is particularly useful as it does not assume a 
+linear trend and can detect monotonic changes over time (@tbl-trend-tests).
+
+::: {#tbl-trend-tests}
+
+```{r}
+flextable::flextable(ekg_trend_results) |>
+  flextable::theme_vanilla() |>
+  flextable::autofit() |>
+  flextable::fontsize(
+    size = 9
+  ) |>
+  flextable::set_header_labels(
+    EKG_Feature = "ECG Feature",
+    N = "N",
+    JT_p_value = "JT p-value",
+    Linear_p = "Linear p",
+    Quadratic_p = "Quadratic p",
+    Interpretation = "Interpretation"
+  )
+```
+Trend test results for ECG features across pregnancy trimesters (0 through 
+early postpartum). JT = Jonckheere-Terpstra non-parametric trend test; Linear 
+and Quadratic p-values from polynomial contrasts.
 :::
