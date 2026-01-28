@@ -284,7 +284,7 @@ flextable::flextable(ekg_trend_results) |>
     Interpretation = "Interpretation"
   )
 ```
-Trend test results for ECG features across pregnancy trimesters (0 through 
-early postpartum). JT = Jonckheere-Terpstra non-parametric trend test; Linear 
-and Quadratic p-values from polynomial contrasts.
+Trend test results for ECG features from pre-pregnancy (Trimester 0) through 
+early postpartum (Trimester 4, ≤2 weeks postpartum). JT = Jonckheere-Terpstra 
+non-parametric trend test; Linear and Quadratic p-values from polynomial contrasts.
 :::

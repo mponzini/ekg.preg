@@ -98,7 +98,8 @@ The `Interpretation` column in results provides automatic interpretation:
 # Load the package
 devtools::load_all()
 
-# Load data
+# Load data (ekg_normal is the cleaned dataset available after processing)
+# Use your actual dataset name if different
 data(ekg_normal)
 
 # 1. Test single feature with detailed output

@@ -11,8 +11,10 @@
 #'   "QRS_Duration", "QTc_Bazett", "PR_Interval", "VentRate")
 #' @param trimesters Vector of trimester values to include in the trend test.
 #'   Default is c(0, 1, 2, 3, 4) which tests from pre-pregnancy through early
-#'   postpartum. Can be customized to test specific periods (e.g., c(1, 2, 3)
-#'   for pregnancy only).
+#'   postpartum (≤2 weeks). Trimester 5 (>2 weeks postpartum) is excluded by
+#'   default as it represents a return to baseline rather than continuation of
+#'   the pregnancy trend. Can be customized to test specific periods (e.g.,
+#'   c(1, 2, 3) for pregnancy only).
 #'
 #' @return A list with components:
 #'   \item{jt_test}{Results from Jonckheere-Terpstra test (non-parametric)}
@@ -22,10 +24,13 @@
 #' @details
 #' The Jonckheere-Terpstra test is a non-parametric test that detects monotonic
 #' trends without assuming linearity. It's particularly useful when the trend
-#' may be non-linear or when data distributions are non-normal.
+#' may be non-linear or when data distributions are non-normal. The test is
+#' two-sided and can detect both increasing and decreasing trends.
 #'
 #' Polynomial contrasts test for linear, quadratic, and cubic trends, which can
 #' help characterize the shape of the trend (e.g., accelerating, decelerating).
+#' The number of polynomial terms depends on the number of time points (e.g.,
+#' 3 time points = linear only, 4 time points = linear + quadratic, etc.).
 #'
 #' @examples
 #' \dontrun{
@@ -51,6 +56,7 @@ test_ekg_trend <- function(data, ekg_var, trimesters = c(0, 1, 2, 3, 4)) {
     dplyr::filter(Trimester %in% trimesters) |>
     dplyr::filter(!is.na(.data[[ekg_var]])) |>
     dplyr::mutate(
+      # Convert Trimester to numeric (handles both numeric and factor types)
       Trimester_num = as.numeric(as.character(Trimester))
     )
   
@@ -59,9 +65,11 @@ test_ekg_trend <- function(data, ekg_var, trimesters = c(0, 1, 2, 3, 4)) {
   }
   
   # Jonckheere-Terpstra test for monotonic trend
+  # Two-sided test to detect either increasing or decreasing trends
   jt_result <- DescTools::JonckheereTerpstraTest(
     x = dat_filtered[[ekg_var]],
-    g = dat_filtered$Trimester_num
+    g = dat_filtered$Trimester_num,
+    alternative = "two.sided"
   )
   
   # Polynomial contrast tests using linear model
@@ -188,10 +196,10 @@ process_ekg_trends <- function(data, ekg_vars, trimesters = c(0, 1, 2, 3, 4)) {
     }, error = function(e) {
       data.frame(
         EKG_Feature = var,
-        N = NA,
-        JT_p_value = "Error",
-        Linear_p = "Error",
-        Quadratic_p = "Error",
+        N = NA_integer_,
+        JT_p_value = NA_character_,
+        Linear_p = NA_character_,
+        Quadratic_p = NA_character_,
         Interpretation = paste0("Error: ", e$message),
         stringsAsFactors = FALSE
       )
