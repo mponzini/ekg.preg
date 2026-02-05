@@ -26,18 +26,41 @@ vent_preg_lmer <- lmerTest::lmer(
 
 trimester_ekg_results <- dplyr::left_join(
   process_ekg_lmer(qrs_preg_lmer) |> 
-    dplyr::rename(`QRS Duration` = Estimate),
+    dplyr::rename(`QRS Duration` = Estimate,
+                  `QRS Duration p` = p.value),
   process_ekg_lmer(qtc_preg_lmer) |> 
-    dplyr::rename(`QTc Interval` = Estimate),
+    dplyr::rename(`QTc Interval` = Estimate,
+                  `QTc Interval p` = p.value),
   by = ("Predictor" = "Predictor")
 ) |>
   dplyr::left_join(
     process_ekg_lmer(pr_preg_lmer) |> 
-      dplyr::rename(`PR Interval` = Estimate),
+      dplyr::rename(`PR Interval` = Estimate,
+                  `PR Interval p` = p.value),
     by = ("Predictor" = "Predictor")
   ) |>
   dplyr::left_join(
     process_ekg_lmer(vent_preg_lmer) |> 
+      dplyr::rename(`Heart Rate` = Estimate,
+                  `Heart Rate p` = p.value),
+    by = ("Predictor" = "Predictor")
+  )
+
+# version with CI
+trimester_ekg_results_ci <- dplyr::left_join(
+  process_ekg_lmer(qrs_preg_lmer, se = FALSE, p.value = FALSE) |> 
+    dplyr::rename(`QRS Duration` = Estimate),
+  process_ekg_lmer(qtc_preg_lmer, se = FALSE, p.value = FALSE) |> 
+    dplyr::rename(`QTc Interval` = Estimate),
+  by = ("Predictor" = "Predictor")
+) |>
+  dplyr::left_join(
+    process_ekg_lmer(pr_preg_lmer, se = FALSE, p.value = FALSE) |> 
+      dplyr::rename(`PR Interval` = Estimate),
+    by = ("Predictor" = "Predictor")
+  ) |>
+  dplyr::left_join(
+    process_ekg_lmer(vent_preg_lmer, se = FALSE, p.value = FALSE) |> 
       dplyr::rename(`Heart Rate` = Estimate),
     by = ("Predictor" = "Predictor")
   )
@@ -56,32 +79,7 @@ trimester_ekg_marginals <- dplyr::bind_cols(
       ggeffects::predict_response(
         ekg_tri_model[[x]], terms = "Trimester", margin = "mean_reference"
       ) |> 
-        tibble::as_tibble() |> 
-        # round to 2 decimals
-        dplyr::mutate(
-          dplyr::across(
-            .cols = where(is.numeric),
-            ~ .x |> round(2)
-          )
-        ) |> 
-        # combine ci into single column
-        tidyr::unite("ci", conf.low, conf.high, sep = ", ") |> 
-        # combine est and ci into single column
-        tidyr::unite(
-          col = "tmp", 
-          predicted, ci, 
-          sep = " ("
-        ) |> 
-        dplyr::mutate(
-          tmp = paste0(tmp, ")")
-        ) |> 
-        # rename columns
-        dplyr::rename(
-          "Trimester" = x,
-          !!names(ekg_tri_model)[x] := tmp
-        ) |> 
-        # remove unnecessary columns
-        dplyr::select(-c(std.error, group))
+        process_marginals(outcome = names(ekg_tri_model)[x])
     }
   )
 ) |> 
@@ -92,6 +90,48 @@ trimester_ekg_marginals <- dplyr::bind_cols(
     -c(`Trimester...3`, `Trimester...5`, `Trimester...7`)
   )
   
+trimester_ekg_marginals_ci <- dplyr::bind_cols(
+  lapply(
+    1:4,
+    function(x) {
+      ggeffects::predict_response(
+        ekg_tri_model[[x]], terms = "Trimester", margin = "mean_reference"
+      ) |> 
+        process_marginals(outcome = names(ekg_tri_model)[x], se = FALSE)
+    }
+  )
+) |> 
+  dplyr::rename(
+    Trimester = `Trimester...1`
+  ) |> 
+  dplyr::select(
+    -c(`Trimester...3`, `Trimester...5`, `Trimester...7`)
+  )
+  
+
+# combine model est with marginals
+trimester_ekg_tbl <- data.frame(
+  Trimester = trimester_ekg_marginals$Trimester,
+  "QRS Duration" = trimester_ekg_marginals$`QRS Duration`,
+  "QRS Duration Change" = trimester_ekg_results$`QRS Duration`,
+  "QRS Duration p-value" = trimester_ekg_results$`QRS Duration p`,
+  "QTc Interval" = trimester_ekg_marginals$`QTc Interval`,
+  "QTc Interval Change" = trimester_ekg_results$`QTc Interval`,
+  "QTc Interval p-value" = trimester_ekg_results$`QTc Interval p`,
+  "PR Interval" = trimester_ekg_marginals$`PR Interval`,
+  "PR Interval Change" = trimester_ekg_results$`PR Interval`,
+  "PR Interval p-value" = trimester_ekg_results$`PR Interval p`,
+  "Heart Rate" = trimester_ekg_marginals$`Heart Rate`,
+  "Heart Rate Change" = trimester_ekg_results$`Heart Rate`,
+  "Heart Rate p-value" = trimester_ekg_results$`Heart Rate p`,
+  check.names = FALSE
+) |> 
+  dplyr::mutate(
+    dplyr::across(
+      .cols = dplyr::ends_with("Change"),
+      ~ ifelse(Trimester == 0, "", .x)
+    )
+  )
   
 
 # multivariable model: preg = ekg pred
@@ -166,7 +206,7 @@ In a multiple logistic mixed effect model, a higher heart rate were
 associated the pregnancy state (@tbl-preg-ekg)). 
 The shorter PR interval was associated with the 2nd and 3rd trimesters, 
 while higher heart rate was associated with the third trimester, 
-(@tbl-ekg-trimester and @tbl-ekg-trimester-pred).  
+(@tbl-ekg-trimester and @tbl-ekg-trimester-pred, combined results in @tbl-ekg-trimester-combo).  
 
 ::: {#tbl-preg-ekg}
 
@@ -196,7 +236,7 @@ Summary of ECG Features Associated with Pregnancy Compared to Non-pregnant State
 ::: {#tbl-ekg-trimester}
 
 ```{r}
-flextable::flextable(trimester_ekg_results) |>
+flextable::flextable(trimester_ekg_results_ci) |>
   flextable::theme_vanilla() |>
   flextable::fontsize(
     i = c(1:6),
@@ -230,7 +270,7 @@ Trimesters compared to period before pregnancy (Trimester 0)
 ::: {#tbl-ekg-trimester-pred}
 
 ```{r}
-trimester_ekg_marginals |> 
+trimester_ekg_marginals_ci |> 
   flextable::flextable() |> 
   flextable::theme_vanilla() |> 
   flextable::autofit() |> 
@@ -249,4 +289,24 @@ trimester_ekg_marginals |>
   ) 
 ```
 Marginal estimates of ECG Features by Pregnancy Trimesters.
+:::
+
+
+::: {#tbl-ekg-trimester-combo}
+
+```{r}
+trimester_ekg_tbl |> 
+  flextable::flextable() |> 
+  flextable::theme_vanilla() |> 
+  flextable::autofit() |> 
+  flextable::set_header_labels(
+    values = c("Trimester", 
+               rep(c("Estimate", "Change from Trimester 0", "p-value"), 4))
+  ) |> 
+  flextable::add_header_row(
+    values = c("", "QRS Duration", "QTc Interval", "PR Interval", "Heart Rate"),
+    colwidths = c(1, 3, 3, 3, 3)
+  )
+```
+
 :::
