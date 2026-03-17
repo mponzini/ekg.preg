@@ -252,15 +252,15 @@ flextable::flextable(trimester_ekg_results_ci) |>
   # manually select cells to bold
   flextable::bold(
     i = 3,
-    j = 4
+    j = c(4, 5)
   ) |>
   flextable::bold(
     i = 4,
-    j = c(4, 5)
+    j = c(2, 4, 5)
   ) |>
   flextable::bold(
     i = 5,
-    j = c(4, 5)
+    j = c(2, 4, 5)
   ) 
 ```
 Results of linear mixed effect models: ECG Features Associated with Pregnancy 
@@ -277,15 +277,15 @@ trimester_ekg_marginals_ci |>
   # manually select cells to bold
   flextable::bold(
     i = 3,
-    j = 2
+    j = c(2, 5)
   ) |>
   flextable::bold(
     i = 4,
-    j = c(2, 5)
+    j = c(2, 3, 5)
   ) |>
   flextable::bold(
     i = 5,
-    j = c(2, 5)
+    j = c(2, 3, 5)
   ) 
 ```
 Marginal estimates of ECG Features by Pregnancy Trimesters.

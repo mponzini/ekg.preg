@@ -25,8 +25,9 @@ editor_options:
 
 devtools::load_all()
 
-dat_raw <- openxlsx::read.xlsx(
-  "../extdata/merged_cleaned_tmp_1_subset_wks_relabelled_normals_3 2.xlsx"
+dat_raw <- readr::read_csv(
+  "../extdata/merged_cleaned_tmp_1_subset_wks_relabelled_normals_5(in).csv",
+  show_col_types = FALSE
 )
 # age range in raw data for inline reporting
 age_range <- range(dat_raw$AgeAtDelivery) |> round(0)

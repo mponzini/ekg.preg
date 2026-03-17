@@ -1,6 +1,6 @@
 ## process raw data files ##
-ekg_normal_raw <- openxlsx::read.xlsx(
-  "./inst/extdata/merged_cleaned_tmp_1_subset_wks_relabelled_normals_3 2.xlsx"
+ekg_normal_raw <- readr::read_csv(
+  "./inst/extdata/merged_cleaned_tmp_1_subset_wks_relabelled_normals_5(in).csv"
 )
 
 # list of ekg continuous variables
@@ -32,8 +32,8 @@ ekg_normal <- ekg_normal_raw |>
   dplyr::mutate(
     # clean dates
     dplyr::across(
-      .cols = dplyr::all_of(date_vars),
-      ~ janitor::excel_numeric_to_date(.x)
+      .cols = dplyr::any_of(date_vars),
+      ~ as.Date(.x, format = "%m/%d/%Y")
     ),
     # split tri4 in two: tri4 if <= 14 days postpartum (2wks), otherwise tri5
     Diff = lubridate::time_length(
