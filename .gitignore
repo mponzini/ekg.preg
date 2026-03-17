@@ -51,7 +51,7 @@ rsconnect/
 
 # raw data
 data/*.rda
-inst/extdata/*.xlsx
+inst/extdata/
 
 # rendered reports
 inst/analyses/*.html
