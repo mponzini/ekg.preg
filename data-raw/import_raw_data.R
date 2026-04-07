@@ -25,10 +25,11 @@ date_vars <- c(
 
 
 ekg_normal <- ekg_normal_raw |>
-  dplyr::filter(
-    AnyDxInSelectedGroupers == 0,
-    VentRate >= 35
-  ) |>
+  # Filtering done prior to raw data file (Lihong and Arielle)
+  # dplyr::filter(
+  #   AnyDxInSelectedGroupers == 0,
+  #   VentRate >= 35
+  # ) |>
   dplyr::mutate(
     # clean dates
     dplyr::across(

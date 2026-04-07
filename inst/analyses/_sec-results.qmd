@@ -170,19 +170,19 @@ preg_ekg_results <- data.frame(
     " ",
     # PR Interval
     paste0("A 10 unit increase in the PR Interval is associated with a ",
-           "2.6% decrease in the odds of being pregnant",
+           "15% decrease in the odds of being pregnant",
            ", controlling for the other ECG characteristics."),
     # QRS Duration
     paste0("A 10 unit increase in the QRS duration is associated with a ",
-           "4.4% decrease in the odds of being pregnant",
+           "49% decrease in the odds of being pregnant",
            ", controlling for the other ECG characteristics."),
     # QTc Interval
     paste0("A 10 unit increase in the QTc Interval is associated with a ",
-           "0.1% decrease in the odds of being pregnant",
+           "2.5% decrease in the odds of being pregnant",
            ", controlling for the other ECG characteristics."),
     # Heart Rate
     paste0("A 10bpm increase in the heart rate is associated with a ",
-           "7% increase in the odds of being pregnant",
+           "99% increase in the odds of being pregnant",
            ", controlling for the other ECG characteristics.")
   ),
   check.names = FALSE
@@ -193,19 +193,16 @@ preg_ekg_results <- data.frame(
   )
 ```
 
-
-After excluding patients with pre-existing myocardial infarction, 
-heart failure, heart valve disorders, atrial fibrillation and other arrhythmias, 
-along with those who developed hypertensive disorders of pregnancy, 
 `r extract_n_ekg(dat)` ECGs from `r extract_n_subj(dat)` patients were 
 included: `r n_ekg_not_preg` of ECGs (`r prop_ekg_not_preg`) were obtained 
 outside of pregnancy or the 6 months postpartum period and `r n_ekg_preg` of 
 ECGs (`r prop_ekg_preg`) during pregnancy or 2 weeks postpartum, 
 `r n_ekg_tri4` ECGs were during the 2 weeks postpartum period. 
 In a multiple logistic mixed effect model, a higher heart rate were 
-associated the pregnancy state (@tbl-preg-ekg)). 
-The shorter PR interval was associated with the 2nd and 3rd trimesters, 
-while higher heart rate was associated with the third trimester, 
+associated the pregnancy state (@tbl-preg-ekg).  
+
+Shorter PR interval and QRS duration were associated with the 2nd and 3rd trimesters and postpartum, 
+while higher heart rate was associated with the 2nd and 3rd trimesters and postpartum 
 (@tbl-ekg-trimester and @tbl-ekg-trimester-pred, combined results in @tbl-ekg-trimester-combo).  
 
 ::: {#tbl-preg-ekg}
@@ -252,7 +249,7 @@ flextable::flextable(trimester_ekg_results_ci) |>
   # manually select cells to bold
   flextable::bold(
     i = 3,
-    j = c(4, 5)
+    j = c(2, 4, 5)
   ) |>
   flextable::bold(
     i = 4,
@@ -277,7 +274,7 @@ trimester_ekg_marginals_ci |>
   # manually select cells to bold
   flextable::bold(
     i = 3,
-    j = c(2, 5)
+    j = c(2, 3, 5)
   ) |>
   flextable::bold(
     i = 4,
@@ -306,7 +303,37 @@ trimester_ekg_tbl |>
   flextable::add_header_row(
     values = c("", "QRS Duration", "QTc Interval", "PR Interval", "Heart Rate"),
     colwidths = c(1, 3, 3, 3, 3)
+  ) |> 
+  flextable::footnote(
+    part = "header",
+    i = 2, j = 1,
+    value = flextable::as_paragraph(
+      "0: pre-pregnancy; 1: conception to 13 weeks and 6 days, ",
+      "2: 14 weeks to 27 weeks and 6 days; 3: 28 weeks to delivery; ",
+      "4: delivery to 1 week and 6 days postpartum; ",
+      "5: 2 weeks to 12 weeks postpartum"
+    ),
+    ref_symbols = "1"
+  ) |> 
+  flextable::add_footer_row(
+    top = FALSE,
+    colwidths = 13,
+    values = flextable::as_paragraph(
+      "Data shown are mean (SE) and corresponding p-value as estimated by ", 
+      "linear mixed-effect models with a random pregnancy episode effect. ",
+      "ECG features were scaled (1 unit equals a 10 point change) for analysis."
+    )
+  ) |> 
+  flextable::bold(
+    i = c(3, 4, 5),
+    j = c(4),
+    part = "body"
+  ) |> 
+  flextable::bold(
+    i = c(3, 4, 5),
+    j = c(10, 13),
+    part = "body"
   )
 ```
-
+Four ECG parameter changes through different stages during pregnancy and postpartum.  
 :::
