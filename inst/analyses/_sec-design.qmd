@@ -2,10 +2,16 @@
 This is an analysis of a database that includes `r nrow(dat_raw)` ECGs 
 on `r extract_n_subj(dat_raw)` individual patients from `r age_range` years 
 of age who were pregnant at least once between 2011 to 2024 in a single 
-tertiary medical center. 
-Univariate and multiple generalized linear mixed effect models with a 
-random effect for pregnancy identifier were fit to evaluate associations 
-between four ECG features 
-(QRS interval, QTc interval, PR interval, and heart rate) 
-and pregnancy after 6 weeks and by trimester compared to ECG features in 
-women who were not pregnant nor within 6 months postpartum.  
+tertiary medical center. After excluding 4 records for pregnant patients <18 
+years of age, our analytic dataset includes `r nrow(dat)` ECGs from 
+`r extract_n_subj(dat)` patients.  
+
+## Statistical Analysis
+
+The association between four between four ECG features and pregnancy status 
+(binary) was assessed using mixed effects logistic regression with a random 
+effect for pregnancy.  
+\
+The relationships between pregnancy trimester (0, 1, 2, 3, 4, or 5) and ECG 
+features were assessed through linear mixed effects models with a random effect 
+for pregnancy. A separate model was fit for each ECG feature.

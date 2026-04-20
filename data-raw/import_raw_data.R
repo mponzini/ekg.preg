@@ -1,6 +1,10 @@
 ## process raw data files ##
-ekg_normal_raw <- readr::read_csv(
-  "./inst/extdata/merged_cleaned_tmp_1_subset_wks_relabelled_normals_5(in).csv"
+ekg_normal_raw <- openxlsx::read.xlsx(
+  paste0(
+    "./inst/extdata/",
+    "merged_cleaned_tmp_1_subset_wks_relabelled_",
+    "normals_after_handling_pregnancy_duplicate_id_issues 2.xlsx"
+  )
 )
 
 # list of ekg continuous variables
@@ -23,13 +27,8 @@ date_vars <- c(
   "AcquisitionDateTime_DT_Char", "EpiStartDate"
 )
 
-
 ekg_normal <- ekg_normal_raw |>
-  # Filtering done prior to raw data file (Lihong and Arielle)
-  # dplyr::filter(
-  #   AnyDxInSelectedGroupers == 0,
-  #   VentRate >= 35
-  # ) |>
+  # Filtering done prior to raw data file (Lihong and Arielle) #
   dplyr::mutate(
     # clean dates
     dplyr::across(

@@ -170,19 +170,19 @@ preg_ekg_results <- data.frame(
     " ",
     # PR Interval
     paste0("A 10 unit increase in the PR Interval is associated with a ",
-           "15% decrease in the odds of being pregnant",
+           "13% decrease in the odds of being pregnant",
            ", controlling for the other ECG characteristics."),
     # QRS Duration
     paste0("A 10 unit increase in the QRS duration is associated with a ",
-           "49% decrease in the odds of being pregnant",
+           "40% decrease in the odds of being pregnant",
            ", controlling for the other ECG characteristics."),
     # QTc Interval
     paste0("A 10 unit increase in the QTc Interval is associated with a ",
-           "2.5% decrease in the odds of being pregnant",
+           "14% decrease in the odds of being pregnant",
            ", controlling for the other ECG characteristics."),
     # Heart Rate
     paste0("A 10bpm increase in the heart rate is associated with a ",
-           "99% increase in the odds of being pregnant",
+           "2.5 times increase in the odds of being pregnant",
            ", controlling for the other ECG characteristics.")
   ),
   check.names = FALSE

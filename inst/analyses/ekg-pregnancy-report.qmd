@@ -25,12 +25,15 @@ editor_options:
 
 devtools::load_all()
 
-dat_raw <- readr::read_csv(
-  "../extdata/merged_cleaned_tmp_1_subset_wks_relabelled_normals_5(in).csv",
-  show_col_types = FALSE
+dat_raw <- openxlsx::read.xlsx(
+  paste0(
+    "../extdata/",
+    "merged_cleaned_tmp_1_subset_wks_relabelled_",
+    "normals_after_handling_pregnancy_duplicate_id_issues 2.xlsx"
+  )
 )
 # age range in raw data for inline reporting
-age_range <- range(dat_raw$AgeAtDelivery) |> round(0)
+age_range <- range(dat_raw$PatAgeAtECG, na.rm = TRUE) |> round(0)
 age_range <- paste0(age_range[1], "-", age_range[2])
 
 dat <- ekg.preg::ekg_normal
@@ -61,7 +64,7 @@ prop_ekg_preg <- paste0(
 )
 
 # ekg during 2wks postpartum
-n_ekg_tri4 <- extract_n_ekg(dat, trimester = 4)
+n_ekg_tri4 <- extract_n_ekg(dat, trimester = 4) 
 ```
 
 
